@@ -58,6 +58,22 @@ class WeTwo:
         self.db_con.commit()
         return 0
 
+    def is_user_id_exists(self, user_id):
+        if not user_id:
+            return False
+        with self.db_con.cursor() as cursor:
+            sql = 'SELECT EXISTS (SELECT * FROM `users` WHERE `uid`=%s) AS result'
+            cursor.execute(sql, user_id)
+            result = cursor.fetchone()
+            return result['result'] == 1
+
+    def is_password_correct(self, user_id, password):
+        with self.db_con.cursor() as cursor:
+            sql = 'SELECT EXISTS (SELECT * FROM `users` WHERE `uid`=%s AND `password`=%s) AS result'
+            cursor.execute(sql, (user_id, password))
+            result = cursor.fetchone()
+            return result['result'] == 1
+
     def get_user_id(self, name):
         with self.db_con.cursor() as cursor:
             sql = 'SELECT `uid` AS user_id FROM `users` WHERE `name`=%s'

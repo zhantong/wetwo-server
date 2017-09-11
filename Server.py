@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect, url_for
 import flask_login
 from WeTwo import WeTwo
 
@@ -51,6 +51,21 @@ def logout():
 @login_manager.unauthorized_handler
 def unauthorized_handler():
     return 'Unauthorized'
+
+
+@app.route('/')
+@flask_login.login_required
+def index():
+    return render_template('index.html')
+
+
+@app.route('/postArticle', methods=['POST'])
+@flask_login.login_required
+def post_article():
+    article = request.form['article']
+    user_id = flask_login.current_user.id
+    article_id = wetwo.post_article(article, user_id)
+    return redirect('/')
 
 
 @app.route('/protected')

@@ -57,6 +57,8 @@ def unauthorized_handler():
 @flask_login.login_required
 def index():
     articles = wetwo.get_articles()
+    for article in articles:
+        article['comments'] = wetwo.get_comments(article['article_id'])
     return render_template('index.html', articles=articles)
 
 

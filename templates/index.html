@@ -55,7 +55,43 @@
                     <div class="panel-body">
                         {{ article.article }}
                     </div>
+                    <div class="panel-footer">
+                        <a class="btn btn-default pull-right" role="button" data-toggle="collapse"
+                           href="#commentCollapse{{ loop.index }}" aria-expanded="false"
+                           aria-controls="commentCollapse{{ loop.index }}">
+                            评论
+                        </a>
+                        <div class="clearfix"></div>
+                        <div class="collapse" id="commentCollapse{{ loop.index }}">
+                            <ul class="media-list">
+                                {% for comment in article.comments %}
+                                    <li class="media">
+                                        <div class="media-left">
+                                        </div>
+                                        <div class="media-body">
+                                            <h4 class="media-heading">{{ comment.user_id }}</h4>
+                                            <p>{{ comment.comment }}</p>
+                                            {%- for child_comment in comment.children recursive -%}
+                                                <div class="media">
+                                                    <div class="media-left">
+                                                    </div>
+                                                    <div class="media-body">
+                                                        <h4 class="media-heading">{{ child_comment.user_id }}</h4>
+                                                        <p>{{ child_comment.comment }}</p>
+                                                        {%- if child_comment.children -%}
+                                                            {{ loop(child_comment.children) }}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            {%- endfor -%}
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
+
             {% endfor %}
         </div>
     </div>

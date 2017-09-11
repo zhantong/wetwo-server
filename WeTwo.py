@@ -31,7 +31,6 @@ class WeTwo:
             `cid` INT(10),
             `created` DATETIME DEFAULT CURRENT_TIMESTAMP,
             `authorId` INT(10),
-            `ownerId` INT(10),
             `ip` VARCHAR(64),
             `agent` VARCHAR(200),
             `text` TEXT,
@@ -85,8 +84,23 @@ class WeTwo:
             result = cursor.fetchone()
             return result
 
+    def post_comment(self, article_id, user_id, comment, parent_comment_id=0):
+        with self.db_con.cursor() as cursor:
+            sql = 'INSERT INTO `comments` (`cid`,`authorId`,`text`,`parent`) VALUES (%s,%s,%s,%s)'
+            cursor.execute(sql, (article_id, user_id, comment, parent_comment_id))
+        self.db_con.commit()
+
+    def get_comments(self, article_id, parent_comment_id=0):
+        with self.db_con.cursor() as cursor:
+            sql = 'SELECT `coid` AS comment_id,`cid` AS article_id,`created` AS post_time,`authorId` AS user_id, `text` AS comment,`parent` AS parent_comment_id FROM `comments` WHERE `cid`=%s AND `parent`=%s'
+            cursor.execute(sql, (article_id, parent_comment_id))
+            result = cursor.fetchall()
+            for item in result:
+                item['children'] = self.get_comments(article_id, item['comment_id'])
+            return result
+
 
 if __name__ == '__main__':
     wetwo = WeTwo()
-    # print(wetwo.post_article('test content',1))
-    # print(wetwo.get_article(3))
+    # wetwo.post_comment(3,1,'test comment 2',1)
+    # print(wetwo.get_comments(3))

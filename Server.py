@@ -56,7 +56,8 @@ def unauthorized_handler():
 @app.route('/')
 @flask_login.login_required
 def index():
-    return render_template('index.html')
+    articles = wetwo.get_articles()
+    return render_template('index.html', articles=articles)
 
 
 @app.route('/postArticle', methods=['POST'])

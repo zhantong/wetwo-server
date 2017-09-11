@@ -100,6 +100,14 @@ class WeTwo:
             result = cursor.fetchone()
             return result
 
+    def get_articles(self, user_id=None, offset=0, limit=20):
+        with self.db_con.cursor() as cursor:
+            sql = 'SELECT `cid` AS article_id,`create` AS post_time,`text` AS article,`authorId` AS user_id FROM `contents` ' + (
+                'WHERE `authorId`=%s' if user_id is not None else '') + ' LIMIT %s OFFSET %s'
+            cursor.execute(sql, ((user_id, offset, limit) if user_id is not None else (limit, offset)))
+            result = cursor.fetchall()
+            return result
+
     def post_comment(self, article_id, user_id, comment, parent_comment_id=0):
         with self.db_con.cursor() as cursor:
             sql = 'INSERT INTO `comments` (`cid`,`authorId`,`text`,`parent`) VALUES (%s,%s,%s,%s)'

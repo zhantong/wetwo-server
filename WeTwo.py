@@ -43,7 +43,33 @@ class WeTwo:
             cursor.execute(sql_create_comments_table)
         self.db_con.commit()
 
+    def register(self, name, password):
+        def check_exists(name):
+            with self.db_con.cursor() as cursor:
+                sql = 'SELECT EXISTS (SELECT * FROM `users` WHERE `name`=%s) AS result'
+                cursor.execute(sql, name)
+                result = cursor.fetchone()
+                return result['result'] == 1
+
+        if check_exists(name):
+            return -1
+        with self.db_con.cursor() as cursor:
+            sql = 'INSERT INTO `users` (`name`,`password`) VALUES (%s,%s)'
+            cursor.execute(sql, (name, password))
+        self.db_con.commit()
+        return 0
+
+    def get_user_id(self, name):
+        with self.db_con.cursor() as cursor:
+            sql = 'SELECT `uid` AS user_id FROM `users` WHERE `name`=%s'
+            cursor.execute(sql, name)
+            result = cursor.fetchone()
+            if not result:
+                return None
+            return result['user_id']
+
 
 if __name__ == '__main__':
     wetwo = WeTwo()
-    wetwo.init_db()
+    # wetwo.register('test1','123456')
+    # wetwo.get_user_id('test')

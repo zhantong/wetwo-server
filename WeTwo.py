@@ -68,8 +68,25 @@ class WeTwo:
                 return None
             return result['user_id']
 
+    def post_article(self, article, user_id):
+        with self.db_con.cursor() as cursor:
+            sql = 'INSERT INTO `contents` (`text`,`authorId`) VALUES (%s,%s)'
+            cursor.execute(sql, (article, str(user_id)))
+            sql_get_article_id = 'SELECT LAST_INSERT_ID() AS article_id'
+            cursor.execute(sql_get_article_id)
+            article_id = cursor.fetchone()['article_id']
+        self.db_con.commit()
+        return article_id
+
+    def get_article(self, article_id):
+        with self.db_con.cursor() as cursor:
+            sql = 'SELECT `cid` AS article_id,`create` AS post_time,`text` AS article,`authorId` AS user_id FROM `contents` WHERE `cid`=%s'
+            cursor.execute(sql, article_id)
+            result = cursor.fetchone()
+            return result
+
 
 if __name__ == '__main__':
     wetwo = WeTwo()
-    # wetwo.register('test1','123456')
-    # wetwo.get_user_id('test')
+    # print(wetwo.post_article('test content',1))
+    # print(wetwo.get_article(3))

@@ -71,6 +71,17 @@ def post_article():
     return redirect('/')
 
 
+@app.route('/postComment', methods=['POST'])
+@flask_login.login_required
+def post_comment():
+    article_id = request.form['articleId']
+    comment = request.form['comment']
+    parent_comment_id = request.form['parentCommentId']
+    user_id = flask_login.current_user.id
+    wetwo.post_comment(article_id, user_id, comment, parent_comment_id)
+    return redirect('/')
+
+
 @app.route('/protected')
 @flask_login.login_required
 def protected():

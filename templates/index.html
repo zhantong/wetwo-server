@@ -63,6 +63,7 @@
                         </a>
                         <div class="clearfix"></div>
                         <div class="collapse" id="commentCollapse{{ loop.index }}">
+                            {% set id_comment_form='formComment'+loop.index|string %}
                             <ul class="media-list">
                                 {% for comment in article.comments %}
                                     <li class="media">
@@ -70,14 +71,28 @@
                                         </div>
                                         <div class="media-body">
                                             <h4 class="media-heading">{{ comment.user_id }}</h4>
-                                            <p>{{ comment.comment }}</p>
+                                            <p>{{ comment.comment }}
+                                                <button type="button" class="btn btn-default pull-right btnReplyComment"
+                                                        data-commentId="{{ comment.comment_id }}"
+                                                        data-userId="{{ comment.user_id }}"
+                                                        data-target-form="{{ id_comment_form }}">回复
+                                                </button>
+                                            </p>
                                             {%- for child_comment in comment.children recursive -%}
                                                 <div class="media">
                                                     <div class="media-left">
                                                     </div>
                                                     <div class="media-body">
                                                         <h4 class="media-heading">{{ child_comment.user_id }}</h4>
-                                                        <p>{{ child_comment.comment }}</p>
+                                                        <p>{{ child_comment.comment }}
+                                                            <button type="button"
+                                                                    class="btn btn-default pull-right btnReplyComment"
+                                                                    data-commentId="{{ child_comment.comment_id }}"
+                                                                    data-userId="{{ child_comment.user_id }}"
+                                                                    data-target-form="{{ id_comment_form }}">
+                                                                回复
+                                                            </button>
+                                                        </p>
                                                         {%- if child_comment.children -%}
                                                             {{ loop(child_comment.children) }}
                                                         {% endif %}
@@ -88,10 +103,22 @@
                                     </li>
                                 {% endfor %}
                             </ul>
+                            <form id="{{ id_comment_form }}" class="formComment">
+                                <div class="input-group">
+                                    <span class="input-group-addon">回复文章</span>
+
+                                    <input type="text" class="form-control" name="comment" required>
+                                    <input type="hidden" name="articleId" value="{{ article.article_id }}">
+                                    <input type="hidden" name="parentCommentId" value="0">
+
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-default" type="submit">发布</button>
+                                    </span>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
-
             {% endfor %}
         </div>
     </div>
@@ -99,5 +126,6 @@
 
 <script src="{{ url_for('static',filename='jquery-3.2.1.min.js') }}"></script>
 <script src="{{ url_for('static',filename='bootstrap/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static',filename='custom.js') }}"></script>
 </body>
 </html>

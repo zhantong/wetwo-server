@@ -1,0 +1,50 @@
+<ul class="media-list">
+    {% for comment in article.comments %}
+        <li class="media">
+            <div class="media-left">
+            </div>
+            <div class="media-body">
+                <h4 class="media-heading">{{ comment.user_id }}</h4>
+                <p>{{ comment.comment }}
+                    <button type="button" class="btn btn-default pull-right btnReplyComment"
+                            data-commentId="{{ comment.comment_id }}"
+                            data-userId="{{ comment.user_id }}">回复
+                    </button>
+                </p>
+                {%- for child_comment in comment.children recursive -%}
+                    <div class="media">
+                        <div class="media-left">
+                        </div>
+                        <div class="media-body">
+                            <h4 class="media-heading">{{ child_comment.user_id }}</h4>
+                            <p>{{ child_comment.comment }}
+                                <button type="button"
+                                        class="btn btn-default pull-right btnReplyComment"
+                                        data-commentId="{{ child_comment.comment_id }}"
+                                        data-userId="{{ child_comment.user_id }}">
+                                    回复
+                                </button>
+                            </p>
+                            {%- if child_comment.children -%}
+                                {{ loop(child_comment.children) }}
+                            {% endif %}
+                        </div>
+                    </div>
+                {%- endfor -%}
+            </div>
+        </li>
+    {% endfor %}
+</ul>
+<form class="formComment">
+    <div class="input-group">
+        <span class="input-group-addon">回复文章</span>
+
+        <input type="text" class="form-control" name="comment" required>
+        <input type="hidden" name="articleId" value="{{ article.article_id }}">
+        <input type="hidden" name="parentCommentId" value="0">
+
+        <span class="input-group-btn">
+            <button class="btn btn-default" type="submit">发布</button>
+        </span>
+    </div>
+</form>

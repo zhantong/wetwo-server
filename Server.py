@@ -79,7 +79,9 @@ def post_comment():
     parent_comment_id = request.form['parentCommentId']
     user_id = flask_login.current_user.id
     wetwo.post_comment(article_id, user_id, comment, parent_comment_id)
-    return redirect('/')
+    article = wetwo.get_article(article_id)
+    article['comments'] = wetwo.get_comments(article_id)
+    return render_template('comment.html', article=article)
 
 
 @app.route('/protected')

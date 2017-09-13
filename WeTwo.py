@@ -11,7 +11,7 @@ class WeTwo:
             sql_create_contents_table = '''
             CREATE TABLE `contents` (
               `cid` INT(10) AUTO_INCREMENT PRIMARY KEY,
-              `create` DATETIME DEFAULT CURRENT_TIMESTAMP,
+              `created` DATETIME DEFAULT CURRENT_TIMESTAMP,
               `text` TEXT,
               `authorId` INT(10)
             )
@@ -19,8 +19,8 @@ class WeTwo:
             sql_create_users_table = '''
             CREATE TABLE `users` (
               `uid` INT(10) AUTO_INCREMENT PRIMARY KEY,
-              `name` VARCHAR(32) UNIQUE,
-              `password` VARCHAR(32),
+              `name` VARCHAR(32) NOT NULL UNIQUE,
+              `password` VARCHAR(32) NOT NULL,
               `created` DATETIME DEFAULT CURRENT_TIMESTAMP,
               `logged` DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -67,12 +67,14 @@ class WeTwo:
             result = cursor.fetchone()
             return result['result'] == 1
 
-    def is_password_correct(self, user_id, password):
+    def is_password_correct(self, user_name=None, user_id=None, password=None):
+        if (user_name is None and user_id is None) or password is None:
+            return False
         with self.db_con.cursor() as cursor:
-            sql = 'SELECT EXISTS (SELECT * FROM `users` WHERE `uid`=%s AND `password`=%s) AS result'
-            cursor.execute(sql, (user_id, password))
+            sql = 'SELECT EXISTS (SELECT * FROM `users` WHERE (`uid`=%s OR `name`=%s) AND `password`=%s) AS result'
+            cursor.execute(sql, (user_id, user_name, password))
             result = cursor.fetchone()
-            return result['result'] == 1
+        return result['result'] == 1
 
     def get_user_id(self, name):
         with self.db_con.cursor() as cursor:
@@ -83,10 +85,14 @@ class WeTwo:
                 return None
             return result['user_id']
 
-    def post_article(self, article, user_id):
+    def post_article(self, article, user_id, time=None):
         with self.db_con.cursor() as cursor:
-            sql = 'INSERT INTO `contents` (`text`,`authorId`) VALUES (%s,%s)'
-            cursor.execute(sql, (article, str(user_id)))
+            if time:
+                sql = 'INSERT INTO `contents` (`text`,`authorId`,`created`) VALUES (%s,%s,%s)'
+                cursor.execute(sql, (article, user_id, time))
+            else:
+                sql = 'INSERT INTO `contents` (`text`,`authorId`) VALUES (%s,%s)'
+                cursor.execute(sql, (article, str(user_id)))
             sql_get_article_id = 'SELECT LAST_INSERT_ID() AS article_id'
             cursor.execute(sql_get_article_id)
             article_id = cursor.fetchone()['article_id']
@@ -95,24 +101,32 @@ class WeTwo:
 
     def get_article(self, article_id):
         with self.db_con.cursor() as cursor:
-            sql = 'SELECT `cid` AS article_id,`create` AS post_time,`text` AS article,`authorId` AS user_id FROM `contents` WHERE `cid`=%s'
+            sql = 'SELECT `cid` AS article_id,`created` AS post_time,`text` AS article,`authorId` AS user_id FROM `contents` WHERE `cid`=%s'
             cursor.execute(sql, article_id)
             result = cursor.fetchone()
             return result
 
     def get_articles(self, user_id=None, offset=0, limit=20):
         with self.db_con.cursor() as cursor:
-            sql = 'SELECT `cid` AS article_id,`create` AS post_time,`text` AS article,`authorId` AS user_id FROM `contents` ' + (
-                'WHERE `authorId`=%s' if user_id is not None else '') + ' LIMIT %s OFFSET %s'
+            sql = 'SELECT `cid` AS article_id,`created` AS post_time,`text` AS article,`authorId` AS user_id FROM `contents` ' + (
+                'WHERE `authorId`=%s' if user_id is not None else '') + ' ORDER BY `created` DESC LIMIT %s OFFSET %s'
             cursor.execute(sql, ((user_id, offset, limit) if user_id is not None else (limit, offset)))
             result = cursor.fetchall()
             return result
 
-    def post_comment(self, article_id, user_id, comment, parent_comment_id=0):
+    def post_comment(self, article_id, user_id, comment, parent_comment_id=0, time=None):
         with self.db_con.cursor() as cursor:
-            sql = 'INSERT INTO `comments` (`cid`,`authorId`,`text`,`parent`) VALUES (%s,%s,%s,%s)'
-            cursor.execute(sql, (article_id, user_id, comment, parent_comment_id))
+            if time:
+                sql = 'INSERT INTO `comments` (`cid`,`authorId`,`text`,`parent`,`created`) VALUES (%s,%s,%s,%s,%s)'
+                cursor.execute(sql, (article_id, user_id, comment, parent_comment_id, time))
+            else:
+                sql = 'INSERT INTO `comments` (`cid`,`authorId`,`text`,`parent`) VALUES (%s,%s,%s,%s)'
+                cursor.execute(sql, (article_id, user_id, comment, parent_comment_id))
+            sql_get_comment_id = 'SELECT LAST_INSERT_ID() AS comment_id'
+            cursor.execute(sql_get_comment_id)
+            comment_id = cursor.fetchone()['comment_id']
         self.db_con.commit()
+        return comment_id
 
     def get_comments(self, article_id, parent_comment_id=0):
         with self.db_con.cursor() as cursor:

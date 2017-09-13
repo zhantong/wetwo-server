@@ -4,11 +4,12 @@
             <div class="media-left">
             </div>
             <div class="media-body">
-                <h4 class="media-heading">{{ comment.user_id }}</h4>
+                <h4 class="media-heading">{{ comment.user_name }}</h4>
                 <p>{{ comment.comment }}
                     <button type="button" class="btn btn-default pull-right btnReplyComment"
                             data-commentId="{{ comment.comment_id }}"
-                            data-userId="{{ comment.user_id }}">回复
+                            data-userId="{{ comment.user_id }}"
+                            data-userName="{{ comment.user_name }}">回复
                     </button>
                 </p>
                 {%- for child_comment in comment.children recursive -%}

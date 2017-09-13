@@ -101,15 +101,39 @@ class WeTwo:
 
     def get_article(self, article_id):
         with self.db_con.cursor() as cursor:
-            sql = 'SELECT `cid` AS article_id,`created` AS post_time,`text` AS article,`authorId` AS user_id FROM `contents` WHERE `cid`=%s'
+            sql = '''
+                SELECT 
+                    `cid` AS article_id,
+                    `created` AS post_time,
+                    `text` AS article,
+                    `authorId` AS user_id 
+                FROM 
+                    `contents` 
+                WHERE 
+                    `cid`=%s
+                '''
             cursor.execute(sql, article_id)
             result = cursor.fetchone()
             return result
 
     def get_articles(self, user_id=None, offset=0, limit=20):
         with self.db_con.cursor() as cursor:
-            sql = 'SELECT contents.cid AS article_id,contents.created AS post_time,contents.text AS article,contents.authorId AS user_id,users.name AS user_name FROM `contents` AS contents, `users` AS users WHERE contents.authorId=users.uid ' + (
-                'AND `contents.authorId`=%s' if user_id is not None else '') + ' ORDER BY contents.created DESC LIMIT %s OFFSET %s'
+            sql = '''
+                SELECT 
+                    contents.cid AS article_id,
+                    contents.created AS post_time,
+                    contents.text AS article,
+                    contents.authorId AS user_id,
+                    users.name AS user_name 
+                FROM 
+                    `contents` AS contents, 
+                    `users` AS users 
+                WHERE 
+                    contents.authorId=users.uid''' + ('AND `contents.authorId`=%s' if user_id is not None else '') + ''' 
+                ORDER BY contents.created DESC 
+                LIMIT %s 
+                OFFSET %s
+                '''
             cursor.execute(sql, ((user_id, offset, limit) if user_id is not None else (limit, offset)))
             result = cursor.fetchall()
             return result
@@ -130,7 +154,23 @@ class WeTwo:
 
     def get_comments(self, article_id, parent_comment_id=0):
         with self.db_con.cursor() as cursor:
-            sql = 'SELECT comments.coid AS comment_id,comments.cid AS article_id,comments.created AS post_time,comments.authorId AS user_id,users.name AS user_name, comments.text AS comment,comments.parent AS parent_comment_id FROM `comments` AS comments,`users` AS users WHERE comments.authorId=users.uid AND comments.cid=%s AND comments.parent=%s'
+            sql = '''
+                SELECT 
+                    comments.coid AS comment_id,
+                    comments.cid AS article_id,
+                    comments.created AS post_time,
+                    comments.authorId AS user_id,
+                    users.name AS user_name, 
+                    comments.text AS comment,
+                    comments.parent AS parent_comment_id 
+                FROM 
+                    `comments` AS comments,
+                    `users` AS users 
+                WHERE 
+                    comments.authorId=users.uid AND 
+                    comments.cid=%s AND 
+                    comments.parent=%s
+                '''
             cursor.execute(sql, (article_id, parent_comment_id))
             result = cursor.fetchall()
             for item in result:

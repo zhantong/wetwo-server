@@ -98,6 +98,15 @@ def api_get_articles():
     return jsonify(articles)
 
 
+@app.route('/api/getArticle')
+@flask_login.login_required
+def api_get_article():
+    article_id = request.args['articleId']
+    article = wetwo.get_article(article_id)
+    article['comments'] = wetwo.get_comments(article['article_id'])
+    return jsonify(article)
+
+
 @app.route('/postArticle', methods=['POST'])
 @flask_login.login_required
 def post_article():

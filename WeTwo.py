@@ -162,10 +162,21 @@ class WeTwo:
                     comments.authorId AS user_id,
                     users.name AS user_name, 
                     comments.text AS comment,
-                    comments.parent AS parent_comment_id 
-                FROM 
+                    comments.parent AS parent_comment_id,
+                    comments2.authorId AS parent_user_id,
+                    users2.name AS parent_user_name
+                FROM (
                     `comments` AS comments,
-                    `users` AS users 
+                    `users` AS users
+                    )
+                LEFT JOIN
+                    `comments` AS comments2
+                ON
+                    comments.parent=comments2.coid
+                LEFT JOIN
+                    `users` AS users2
+                ON
+                    comments2.authorId=users2.uid
                 WHERE 
                     comments.authorId=users.uid AND 
                     comments.cid=%s AND 

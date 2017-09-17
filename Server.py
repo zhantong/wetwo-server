@@ -65,11 +65,6 @@ def api_logout():
     return jsonify({'status': True, 'message': '注销成功'})
 
 
-@login_manager.unauthorized_handler
-def unauthorized_handler():
-    return 'Unauthorized'
-
-
 @app.route('/')
 @flask_login.login_required
 def index():
@@ -79,10 +74,24 @@ def index():
     return render_template('index.html', articles=articles)
 
 
+@app.route('/api/getUserInfo')
+@flask_login.login_required
+def api_get_user_info():
+    user_id = flask_login.current_user.id
+    user_name = wetwo.get_user_name(user_id)
+    info = {
+        'id': user_id,
+        'name': user_name
+    }
+    return jsonify(info)
+
+
 @app.route('/api/getAllArticles')
 @flask_login.login_required
 def api_get_all_articles():
-    articles = wetwo.get_articles()
+    offset = request.args['offset'] if 'offset' in request.args else 0
+    limit = request.args['limit'] if 'limit' in request.args else 20
+    articles = wetwo.get_articles(offset=offset, limit=limit)
     for article in articles:
         article['comments'] = wetwo.get_comments(article['article_id'])
     return jsonify(articles)

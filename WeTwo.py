@@ -85,6 +85,15 @@ class WeTwo:
                 return None
             return result['user_id']
 
+    def get_user_name(self, user_id):
+        with self.db_con.cursor() as cursor:
+            sql = 'SELECT `name` AS user_name FROM `users` WHERE `uid`=%s'
+            cursor.execute(sql, user_id)
+            result = cursor.fetchone()
+            if not result:
+                return None
+            return result['user_name']
+
     def post_article(self, article, user_id, time=None):
         with self.db_con.cursor() as cursor:
             if time:
@@ -134,7 +143,7 @@ class WeTwo:
                 LIMIT %s 
                 OFFSET %s
                 '''
-            cursor.execute(sql, ((user_id, offset, limit) if user_id is not None else (limit, offset)))
+            cursor.execute(sql, ((user_id, offset, limit) if user_id is not None else (int(limit), int(offset))))
             result = cursor.fetchall()
             return result
 

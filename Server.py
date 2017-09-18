@@ -79,9 +79,11 @@ def index():
 def api_get_user_info():
     user_id = flask_login.current_user.id
     user_name = wetwo.get_user_name(user_id)
+    num_unread_notifications = wetwo.get_num_unread_comments(user_id)
     info = {
         'id': user_id,
-        'name': user_name
+        'name': user_name,
+        'num_unread_notifications': num_unread_notifications
     }
     return jsonify(info)
 

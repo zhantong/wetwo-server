@@ -225,6 +225,13 @@ class WeTwo:
             result = cursor.fetchall()
             return result
 
+    def get_num_unread_comments(self, user_id):
+        with self.db_con.cursor() as cursor:
+            sql = 'SELECT COUNT(*) AS num_unread_comments FROM `comments` WHERE comments.authorId!=%s AND comments.status="未读"'
+            cursor.execute(sql, user_id)
+            result = cursor.fetchone()['num_unread_comments']
+            return result
+
     def set_comment_read(self, comment_id):
         with self.db_con.cursor() as cursor:
             sql = 'UPDATE `comments` SET `status`="已读" WHERE `coid`=%s'

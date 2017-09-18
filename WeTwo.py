@@ -112,14 +112,17 @@ class WeTwo:
         with self.db_con.cursor() as cursor:
             sql = '''
                 SELECT 
-                    `cid` AS article_id,
-                    `created` AS post_time,
-                    `text` AS article,
-                    `authorId` AS user_id 
+                    contents.cid AS article_id,
+                    DATE_FORMAT(contents.created,GET_FORMAT(DATETIME,'ISO'))  AS post_time,
+                    contents.text AS article,
+                    contents.authorId AS user_id,
+                    users.name AS user_name
                 FROM 
-                    `contents` 
+                    `contents` AS contents,
+                    `users` AS users
                 WHERE 
-                    `cid`=%s
+                    `cid`=%s AND 
+                    contents.authorId=users.uid
                 '''
             cursor.execute(sql, article_id)
             result = cursor.fetchone()
@@ -130,10 +133,11 @@ class WeTwo:
             sql = '''
                 SELECT 
                     contents.cid AS article_id,
-                    contents.created AS post_time,
+                    DATE_FORMAT(contents.created,GET_FORMAT(DATETIME,'ISO'))  AS post_time,
                     contents.text AS article,
                     contents.authorId AS user_id,
-                    users.name AS user_name 
+                    users.name AS user_name,
+                    (SELECT COUNT(*) FROM `comments` AS comments WHERE comments.cid=contents.cid) AS num_comments
                 FROM 
                     `contents` AS contents, 
                     `users` AS users 

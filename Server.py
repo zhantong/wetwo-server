@@ -161,6 +161,22 @@ def api_post_comment():
     return jsonify({'status': True, 'commentId': comment_id})
 
 
+@app.route('/api/getUnreadComments')
+@flask_login.login_required
+def api_get_unread_comments():
+    user_id = flask_login.current_user.id
+    comments = wetwo.get_unread_comments(user_id)
+    return jsonify(comments)
+
+
+@app.route('/api/setCommentRead', methods=['POST'])
+@flask_login.login_required
+def api_set_comment_read():
+    comment_id = request.form['commentId']
+    wetwo.set_comment_read(comment_id)
+    return jsonify({'status': True})
+
+
 @app.route('/protected')
 @flask_login.login_required
 def protected():

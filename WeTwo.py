@@ -34,7 +34,8 @@ class WeTwo:
             `ip` VARCHAR(64),
             `agent` VARCHAR(200),
             `text` TEXT,
-            `parent` INT(10)
+            `parent` INT(10),
+            `status` VARCHAR(16) DEFAULT '未读'
             )
             '''
             cursor.execute(sql_create_contents_table)
@@ -200,6 +201,35 @@ class WeTwo:
             for item in result:
                 item['children'] = self.get_comments(article_id, item['comment_id'])
             return result
+
+    def get_unread_comments(self, user_id):
+        with self.db_con.cursor() as cursor:
+            sql = '''
+                SELECT
+                    comments.coid AS comment_id,
+                    comments.cid AS article_id,
+                    DATE_FORMAT(comments.created,GET_FORMAT(DATETIME,'ISO'))  AS post_time,
+                    comments.authorId AS user_id,
+                    users.name AS user_name, 
+                    comments.text AS comment
+                FROM
+                    `comments` AS comments,
+                    `users` AS users
+                WHERE
+                    comments.authorId!=%s AND 
+                    comments.status='未读' AND 
+                    comments.authorId=users.uid
+                ORDER BY comments.created DESC 
+            '''
+            cursor.execute(sql, user_id)
+            result = cursor.fetchall()
+            return result
+
+    def set_comment_read(self, comment_id):
+        with self.db_con.cursor() as cursor:
+            sql = 'UPDATE `comments` SET `status`="已读" WHERE `coid`=%s'
+            cursor.execute(sql, comment_id)
+        self.db_con.commit()
 
 
 if __name__ == '__main__':

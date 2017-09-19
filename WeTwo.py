@@ -72,6 +72,10 @@ class WeTwo:
     def is_password_correct(self, user_name=None, user_id=None, password=None):
         if (user_name is None and user_id is None) or password is None:
             return False
+        if user_name is None:
+            user_name = ''
+        if user_id is None:
+            user_id = -1
         with self.db_con.cursor() as cursor:
             sql = 'SELECT EXISTS (SELECT * FROM `users` WHERE (`uid`=%s OR `name`=%s) AND `password`=%s) AS result'
             cursor.execute(sql, (user_id, user_name, password))

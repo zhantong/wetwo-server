@@ -158,7 +158,6 @@ def api_post_comment():
     parent_comment_id = request.form['parentCommentId']
     time = request.form['time'] if 'time' in request.form else None
     user_id = flask_login.current_user.id if 'userId' not in request.form else request.form['userId']
-    print(article_id, user_id, comment, parent_comment_id, time)
     comment_id = wetwo.post_comment(article_id, user_id, comment, parent_comment_id, time)
     return jsonify({'status': True, 'commentId': comment_id})
 

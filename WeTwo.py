@@ -13,7 +13,8 @@ class WeTwo:
               `cid` INT(10) AUTO_INCREMENT PRIMARY KEY,
               `created` DATETIME DEFAULT CURRENT_TIMESTAMP,
               `text` TEXT,
-              `authorId` INT(10)
+              `authorId` INT(10),
+              `numComments` INT(10) DEFAULT 0
             )
             '''
             sql_create_users_table = '''
@@ -138,8 +139,8 @@ class WeTwo:
                     contents.text AS article,
                     contents.authorId AS user_id,
                     users.name AS user_name,
-                    (SELECT COUNT(*) FROM `comments` AS comments WHERE comments.cid=contents.cid) AS num_comments
-                FROM 
+                    contents.numComments AS num_comments
+                FROM
                     `contents` AS contents, 
                     `users` AS users 
                 WHERE 
@@ -163,6 +164,15 @@ class WeTwo:
             sql_get_comment_id = 'SELECT LAST_INSERT_ID() AS comment_id'
             cursor.execute(sql_get_comment_id)
             comment_id = cursor.fetchone()['comment_id']
+            sql_update_num_comments = '''
+                UPDATE 
+                    `contents` 
+                SET 
+                    numComments = (SELECT COUNT(*) FROM `comments` WHERE contents.cid = comments.cid) 
+                WHERE 
+                    contents.cid = %s
+                '''
+            cursor.execute(sql_update_num_comments, article_id)
         self.db_con.commit()
         return comment_id
 

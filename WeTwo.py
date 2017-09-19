@@ -1,10 +1,13 @@
 import pymysql.cursors
+import json
 
 
 class WeTwo:
-    def __init__(self):
-        self.db_con = pymysql.connect(host='localhost', user='root', password='123456', db='wetwo', charset='utf8mb4',
-                                      cursorclass=pymysql.cursors.DictCursor)
+    def __init__(self, db_config_file_path='db_config.json'):
+        with open(db_config_file_path, 'r', encoding='utf-8') as f:
+            db_config = json.loads(f.read())
+        db_config['cursorclass'] = pymysql.cursors.DictCursor
+        self.db_con = pymysql.connect(**db_config)
 
     def init_db(self):
         with self.db_con.cursor() as cursor:

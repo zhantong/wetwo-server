@@ -9,6 +9,9 @@ class WeTwo:
         db_config['cursorclass'] = pymysql.cursors.DictCursor
         self.db_con = pymysql.connect(**db_config)
 
+    def __del__(self):
+        self.db_con.close()
+
     def init_db(self):
         with self.db_con.cursor() as cursor:
             sql_create_contents_table = '''

@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, jsonify
+from flask import Flask, request, render_template, redirect, jsonify, g
 import flask_login
 from WeTwo import WeTwo
 
@@ -13,12 +13,15 @@ class User(flask_login.UserMixin):
     pass
 
 
-wetwo = WeTwo()
+def get_wetwo():
+    if not hasattr(g, 'wetwo'):
+        g.wetwo = WeTwo()
+    return g.wetwo
 
 
 @login_manager.user_loader
 def user_loader(user_id):
-    if not wetwo.is_user_id_exists(user_id):
+    if not get_wetwo().is_user_id_exists(user_id):
         return
     user = User()
     user.id = user_id
@@ -31,8 +34,8 @@ def login():
         return render_template('login.html')
     user_name = request.form['name']
     password = request.form['password']
-    if user_name and password and wetwo.is_password_correct(user_name=user_name, password=password):
-        user_id = wetwo.get_user_id(user_name)
+    if user_name and password and get_wetwo().is_password_correct(user_name=user_name, password=password):
+        user_id = get_wetwo().get_user_id(user_name)
         user = User()
         user.id = user_id
         flask_login.login_user(user)
@@ -44,8 +47,8 @@ def login():
 def api_login():
     user_name = request.form['name']
     password = request.form['password']
-    if user_name and password and wetwo.is_password_correct(user_name=user_name, password=password):
-        user_id = wetwo.get_user_id(user_name)
+    if user_name and password and get_wetwo().is_password_correct(user_name=user_name, password=password):
+        user_id = get_wetwo().get_user_id(user_name)
         user = User()
         user.id = user_id
         flask_login.login_user(user)
@@ -68,9 +71,9 @@ def api_logout():
 @app.route('/')
 @flask_login.login_required
 def index():
-    articles = wetwo.get_articles()
+    articles = get_wetwo().get_articles()
     for article in articles:
-        article['comments'] = wetwo.get_comments(article['article_id'])
+        article['comments'] = get_wetwo().get_comments(article['article_id'])
     return render_template('index.html', articles=articles)
 
 
@@ -78,8 +81,8 @@ def index():
 @flask_login.login_required
 def api_get_user_info():
     user_id = flask_login.current_user.id
-    user_name = wetwo.get_user_name(user_id)
-    num_unread_notifications = wetwo.get_num_unread_comments(user_id)
+    user_name = get_wetwo().get_user_name(user_id)
+    num_unread_notifications = get_wetwo().get_num_unread_comments(user_id)
     info = {
         'id': user_id,
         'name': user_name,
@@ -93,9 +96,9 @@ def api_get_user_info():
 def api_get_all_articles():
     offset = request.args['offset'] if 'offset' in request.args else 0
     limit = request.args['limit'] if 'limit' in request.args else 20
-    articles = wetwo.get_articles(offset=offset, limit=limit)
+    articles = get_wetwo().get_articles(offset=offset, limit=limit)
     for article in articles:
-        article['comments'] = wetwo.get_comments(article['article_id'])
+        article['comments'] = get_wetwo().get_comments(article['article_id'])
     return jsonify(articles)
 
 
@@ -103,9 +106,9 @@ def api_get_all_articles():
 @flask_login.login_required
 def api_get_articles():
     user_id = flask_login.current_user.id
-    articles = wetwo.get_articles(user_id)
+    articles = get_wetwo().get_articles(user_id)
     for article in articles:
-        article['comments'] = wetwo.get_comments(article['article_id'])
+        article['comments'] = get_wetwo().get_comments(article['article_id'])
     return jsonify(articles)
 
 
@@ -113,8 +116,8 @@ def api_get_articles():
 @flask_login.login_required
 def api_get_article():
     article_id = request.args['articleId']
-    article = wetwo.get_article(article_id)
-    article['comments'] = wetwo.get_comments(article['article_id'])
+    article = get_wetwo().get_article(article_id)
+    article['comments'] = get_wetwo().get_comments(article['article_id'])
     return jsonify(article)
 
 
@@ -123,7 +126,7 @@ def api_get_article():
 def post_article():
     article = request.form['article']
     user_id = flask_login.current_user.id
-    article_id = wetwo.post_article(article, user_id)
+    article_id = get_wetwo().post_article(article, user_id)
     return redirect('/')
 
 
@@ -133,7 +136,7 @@ def api_post_article():
     article = request.form['article']
     time = request.form['time'] if 'time' in request.form else None
     user_id = flask_login.current_user.id
-    article_id = wetwo.post_article(article, user_id, time)
+    article_id = get_wetwo().post_article(article, user_id, time)
     return jsonify({'status': True, 'articleId': article_id})
 
 
@@ -144,9 +147,9 @@ def post_comment():
     comment = request.form['comment']
     parent_comment_id = request.form['parentCommentId']
     user_id = flask_login.current_user.id
-    wetwo.post_comment(article_id, user_id, comment, parent_comment_id)
-    article = wetwo.get_article(article_id)
-    article['comments'] = wetwo.get_comments(article_id)
+    get_wetwo().post_comment(article_id, user_id, comment, parent_comment_id)
+    article = get_wetwo().get_article(article_id)
+    article['comments'] = get_wetwo().get_comments(article_id)
     return render_template('comment.html', article=article)
 
 
@@ -158,7 +161,7 @@ def api_post_comment():
     parent_comment_id = request.form['parentCommentId']
     time = request.form['time'] if 'time' in request.form else None
     user_id = flask_login.current_user.id if 'userId' not in request.form else request.form['userId']
-    comment_id = wetwo.post_comment(article_id, user_id, comment, parent_comment_id, time)
+    comment_id = get_wetwo().post_comment(article_id, user_id, comment, parent_comment_id, time)
     return jsonify({'status': True, 'commentId': comment_id})
 
 
@@ -166,7 +169,7 @@ def api_post_comment():
 @flask_login.login_required
 def api_get_unread_comments():
     user_id = flask_login.current_user.id
-    comments = wetwo.get_unread_comments(user_id)
+    comments = get_wetwo().get_unread_comments(user_id)
     return jsonify(comments)
 
 
@@ -174,7 +177,7 @@ def api_get_unread_comments():
 @flask_login.login_required
 def api_set_comment_read():
     comment_id = request.form['commentId']
-    wetwo.set_comment_read(comment_id)
+    get_wetwo().set_comment_read(comment_id)
     return jsonify({'status': True})
 
 
@@ -182,6 +185,12 @@ def api_set_comment_read():
 @flask_login.login_required
 def protected():
     return 'Logged in as: ' + flask_login.current_user.id
+
+
+@app.teardown_appcontext
+def teardown_appcontext(error):
+    if hasattr(g, 'wetwo'):
+        del g.wetwo
 
 
 if __name__ == '__main__':
